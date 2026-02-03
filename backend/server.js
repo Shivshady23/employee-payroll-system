@@ -28,7 +28,13 @@ mongoose
   .catch(err => console.error(err));
 
 /* ===== SERVER ===== */
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// Vercel provides the server; exporting the app creates a serverless function.
+module.exports = app;
+
+// Allow local development without Vercel.
+if (!process.env.VERCEL) {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
