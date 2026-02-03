@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../../api/axios";
 import EmployeeForm from "../../components/EmployeeForm";
 import SalaryForm from "../../components/SalaryForm";
 import EmployeeList from "../../components/EmployeeList";

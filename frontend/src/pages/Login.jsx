@@ -47,7 +47,7 @@ const Login = () => {
           <div className="logo-wrapper">
             <img src="/Logo3.png" alt="Chauhan Logo" className="login-logo" />
           </div>
-          <h1 className="login-title"></h1>
+          <h1 className="login-title">Chauhan Payroll</h1>
           <p className="login-subtitle">Employee Payroll System</p>
         </div>
 

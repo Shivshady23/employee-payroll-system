@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 
@@ -8,15 +8,16 @@ const UserDashboard = () => {
   const [userInfo, setUserInfo] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    // Get user info from localStorage and fetch employee data
-    const token = localStorage.getItem("token");
-    if (token) {
-      fetchUserData();
+  const fetchOwnSalary = useCallback(async (empId) => {
+    try {
+      const res = await api.get(`/salary/${empId}`);
+      setSalary(res.data);
+    } catch (err) {
+      setSalary(null);
     }
   }, []);
 
-  const fetchUserData = async () => {
+  const fetchUserData = useCallback(async () => {
     try {
       setLoading(true);
       const res = await api.get("/employees");
@@ -30,16 +31,15 @@ const UserDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [fetchOwnSalary]);
 
-  const fetchOwnSalary = async (empId) => {
-    try {
-      const res = await api.get(`/salary/${empId}`);
-      setSalary(res.data);
-    } catch (err) {
-      setSalary(null);
+  useEffect(() => {
+    // Get user info from localStorage and fetch employee data
+    const token = localStorage.getItem("token");
+    if (token) {
+      fetchUserData();
     }
-  };
+  }, [fetchUserData]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");

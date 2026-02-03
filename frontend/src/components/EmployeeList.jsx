@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import api from "../api/axios";
 
 const EmployeeList = () => {
@@ -9,13 +9,7 @@ const EmployeeList = () => {
   const [selectedSalary, setSelectedSalary] = useState(null);
   const [userRole, setUserRole] = useState("");
 
-  useEffect(() => {
-    const role = localStorage.getItem("role");
-    setUserRole(role);
-    fetchEmployees();
-  }, []);
-
-  const fetchEmployees = async () => {
+  const fetchEmployees = useCallback(async () => {
     try {
       const res = await api.get(
         `/employees?page=${page}&limit=5&search=${search}`
@@ -25,11 +19,16 @@ const EmployeeList = () => {
     } catch (err) {
       console.error(err);
     }
-  };
+  }, [page, search]);
+
+  useEffect(() => {
+    const role = localStorage.getItem("role");
+    setUserRole(role);
+  }, []);
 
   useEffect(() => {
     fetchEmployees();
-  }, [page, search]);
+  }, [fetchEmployees]);
 
   const viewSalary = async (employeeId) => {
     try {

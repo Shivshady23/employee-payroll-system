@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import api from "../api/axios";
 
 const SalaryForm = () => {
@@ -24,21 +24,21 @@ const SalaryForm = () => {
     return "";
   };
 
-  useEffect(() => {
-    fetchEmployees();
-  }, []);
-
-  const fetchEmployees = async () => {
+  const fetchEmployees = useCallback(async () => {
     try {
       const res = await api.get("/employees?limit=100");
       setEmployees(res.data.employees);
     } catch (err) {
       console.error("Error fetching employees:", err);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchEmployees();
+  }, [fetchEmployees]);
 
   // Calculate deductions in real-time for preview
-  const calculateDeductions = () => {
+  const calculateDeductions = useCallback(() => {
     const basicNum = Number(basic) || 0;
     const hraNum = Number(hra) || 0;
     const conveyanceNum = Number(conveyance) || 0;
@@ -73,14 +73,16 @@ const SalaryForm = () => {
       totalEmployerContribution,
       esicApplicable
     };
-  };
+  }, [basic, conveyance, hra]);
 
   // Update calculations when salary inputs change
   useEffect(() => {
     if (basic || hra || conveyance) {
       setCalculatedValues(calculateDeductions());
+    } else {
+      setCalculatedValues(null);
     }
-  }, [basic, hra, conveyance]);
+  }, [basic, conveyance, hra, calculateDeductions]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
