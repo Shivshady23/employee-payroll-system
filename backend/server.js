@@ -21,6 +21,11 @@ app.use("/api/employees", employeeRoutes);
 app.use("/api/salary", salaryRoutes);
 app.use("/api/auth", authRoutes);
 
+// Health check for Vercel/monitoring.
+app.get("/api/health", (_req, res) => {
+  res.status(200).json({ status: "ok" });
+});
+
 /* ===== DB ===== */
 mongoose
   .connect(process.env.MONGO_URI)
