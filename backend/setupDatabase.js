@@ -8,14 +8,27 @@ if (process.env.NODE_ENV !== "production") {
 
 const User = require("./models/User");
 
+const getSanitizedMongoUri = () =>
+  (process.env.MONGO_URI || "")
+    .trim()
+    .replace(/^['"]|['"]$/g, "");
+
 const setupDatabase = async () => {
   try {
-    if (!process.env.MONGO_URI) {
+    const mongoUri = getSanitizedMongoUri();
+
+    if (!mongoUri) {
       throw new Error("MONGO_URI is missing. Set it in your environment.");
     }
 
+    if (!/^mongodb(\+srv)?:\/\//.test(mongoUri)) {
+      throw new Error(
+        'Invalid MONGO_URI format. It must start with "mongodb://" or "mongodb+srv://".'
+      );
+    }
+
     // Connect to MongoDB
-    await mongoose.connect(process.env.MONGO_URI, { serverSelectionTimeoutMS: 10000 });
+    await mongoose.connect(mongoUri, { serverSelectionTimeoutMS: 10000 });
     console.log("✅ Connected to MongoDB");
 
     // Check if test users already exist

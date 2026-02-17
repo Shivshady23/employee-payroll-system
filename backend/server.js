@@ -17,20 +17,39 @@ mongoose.set("bufferCommands", false);
 /* ===== DB ===== */
 let connectPromise;
 
+const getSanitizedEnvironment = () => {
+  const mongoUri = (process.env.MONGO_URI || "")
+    .trim()
+    .replace(/^['"]|['"]$/g, "");
+  const jwtSecret = (process.env.JWT_SECRET || "").trim();
+
+  return { mongoUri, jwtSecret };
+};
+
 const validateEnvironment = () => {
   const missing = [];
+  const { mongoUri, jwtSecret } = getSanitizedEnvironment();
 
-  if (!process.env.MONGO_URI) {
+  if (!mongoUri) {
     missing.push("MONGO_URI");
   }
 
-  if (!process.env.JWT_SECRET) {
+  if (!jwtSecret) {
     missing.push("JWT_SECRET");
   }
 
   if (missing.length > 0) {
     throw new Error(`Missing environment variable(s): ${missing.join(", ")}`);
   }
+
+  if (!/^mongodb(\+srv)?:\/\//.test(mongoUri)) {
+    throw new Error(
+      'Invalid MONGO_URI format. It must start with "mongodb://" or "mongodb+srv://".'
+    );
+  }
+
+  process.env.MONGO_URI = mongoUri;
+  process.env.JWT_SECRET = jwtSecret;
 };
 
 const connectDatabase = async () => {
