@@ -1,12 +1,16 @@
 import axios from "axios";
 
+const API_BASE_URL =
+  process.env.REACT_APP_API_BASE_URL ||
+  "https://employee-payroll-backend-wsxi.onrender.com/api";
+
 const api = axios.create({
-  baseURL: "https://employee-payroll-backend-wsxi.onrender.com/api"
+  baseURL: API_BASE_URL
 });
 
-// 🔐 REQUEST INTERCEPTOR
+// REQUEST INTERCEPTOR
 api.interceptors.request.use(
-  (config) => {
+  config => {
     const token = localStorage.getItem("token");
 
     if (token) {
@@ -15,13 +19,13 @@ api.interceptors.request.use(
 
     return config;
   },
-  (error) => Promise.reject(error)
+  error => Promise.reject(error)
 );
 
-// 🚨 RESPONSE INTERCEPTOR (optional but recommended)
+// RESPONSE INTERCEPTOR (optional but recommended)
 api.interceptors.response.use(
-  (response) => response,
-  (error) => {
+  response => response,
+  error => {
     if (error.response && error.response.status === 401) {
       // token expired / invalid
       localStorage.removeItem("token");
