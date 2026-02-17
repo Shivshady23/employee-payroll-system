@@ -45,7 +45,11 @@ const Login = () => {
         {/* Logo Section */}
         <div className="login-logo-section">
           <div className="logo-wrapper">
-            <img src="/Logo3.png" alt="Chauhan Logo" className="login-logo" />
+            <img
+              src={`${process.env.PUBLIC_URL}/Logo3.png`}
+              alt="Chauhan Logo"
+              className="login-logo"
+            />
           </div>
           <h1 className="login-title">Chauhan Payroll</h1>
           <p className="login-subtitle">Employee Payroll System</p>
