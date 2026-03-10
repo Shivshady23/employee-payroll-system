@@ -44,10 +44,7 @@ const Login = () => {
       <div className="login-container">
         {/* Logo Section */}
         <div className="login-logo-section">
-          <div className="logo-wrapper">
-            <img src="frontend/public/Logo3.png" alt="Chauhan Logo" className="login-logo" />
-          </div>
-          <h1 className="login-title">Chauhan Payroll</h1>
+          <h1 className="login-title">Tech Solution</h1>
           <p className="login-subtitle">Employee Payroll System</p>
         </div>
 
