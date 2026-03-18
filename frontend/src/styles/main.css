@@ -1289,3 +1289,262 @@ input[type="text"] {
   border-radius: 8px;
   padding: 10px 14px;
 }
+
+/* ================================
+   GLOBAL DARK THEME
+   ================================ */
+
+:root {
+  --dark-bg: #0b1120;
+  --dark-surface: #121a2b;
+  --dark-surface-soft: #1a2438;
+  --dark-border: #2b3955;
+  --dark-text: #e5ecf8;
+  --dark-muted: #9caecc;
+  --dark-primary: #38bdf8;
+  --dark-primary-hover: #0ea5e9;
+  --dark-danger: #ef4444;
+  --dark-danger-hover: #dc2626;
+  --dark-success: #22c55e;
+}
+
+body {
+  background: radial-gradient(circle at top, #101935 0%, var(--dark-bg) 55%);
+  color: var(--dark-text);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--dark-text);
+}
+
+hr {
+  border-top-color: var(--dark-border);
+}
+
+.app-container,
+.dashboard-container {
+  background: transparent;
+}
+
+.tab-content,
+.form-container,
+.salary-card,
+.salary-section,
+.user-info-card,
+.attendance-card,
+.modal-content,
+.preview-section,
+.salary-preview {
+  background: var(--dark-surface);
+  border-color: var(--dark-border);
+  color: var(--dark-text);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.dashboard-header {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  border: 1px solid var(--dark-border);
+}
+
+.dashboard-header h1,
+.user-info-card p,
+.salary-section p,
+.modal-content p,
+.attendance-card p,
+.preview-item,
+.no-data {
+  color: var(--dark-text);
+}
+
+.user-info-card {
+  border-left-color: var(--dark-primary);
+}
+
+.tabs .tab-btn {
+  background: var(--dark-surface-soft);
+  border-color: var(--dark-border);
+  color: var(--dark-text);
+}
+
+.tabs .tab-btn.active,
+.tabs .tab-btn:hover {
+  background: var(--dark-primary);
+  border-color: var(--dark-primary);
+  color: #001119;
+}
+
+.logout-btn {
+  background: var(--dark-danger);
+}
+
+.logout-btn:hover {
+  background: var(--dark-danger-hover);
+}
+
+table th {
+  background: #17233a;
+}
+
+table td {
+  color: var(--dark-text);
+}
+
+table tr:nth-child(even) {
+  background: #141f33;
+}
+
+table tr:nth-child(odd) {
+  background: #10192a;
+}
+
+form input,
+form select,
+.form-input,
+.form-select,
+.login-input,
+input[type="text"] {
+  background: #0e1728;
+  border-color: var(--dark-border);
+  color: var(--dark-text);
+}
+
+form input::placeholder,
+form select::placeholder,
+.form-input::placeholder,
+.login-input::placeholder {
+  color: var(--dark-muted);
+}
+
+form input:focus,
+form select:focus,
+.form-input:focus,
+.form-select:focus,
+.login-input:focus,
+input[type="text"]:focus {
+  border-color: var(--dark-primary);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+  background: #0f1b2f;
+}
+
+.form-label,
+.login-label,
+.form-title,
+.preview-title,
+.salary-view h2,
+.salary-section h3,
+.modal-content h3,
+.salary-details h4 {
+  color: var(--dark-text);
+}
+
+.form-hint,
+.login-description,
+.login-footer-text {
+  color: var(--dark-muted);
+}
+
+.form-button,
+.form-container button,
+button,
+.action-btn,
+.attendance-actions button,
+.copy-link-btn {
+  background: var(--dark-primary);
+  color: #001119;
+}
+
+.form-button:hover:not(:disabled),
+.form-container button:hover:not(:disabled),
+button:hover:not(:disabled),
+.attendance-actions button:hover:not(:disabled),
+.copy-link-btn:hover:not(:disabled) {
+  background: var(--dark-primary-hover);
+}
+
+.pagination button {
+  background: #1f2d46;
+  color: var(--dark-text);
+}
+
+.pagination button:disabled {
+  background: #42516f;
+}
+
+.badge {
+  background: #3d2f17;
+  color: #ffd27c;
+}
+
+.login-page {
+  background: linear-gradient(135deg, #0b1120 0%, #151f37 45%, #1d2b4a 100%);
+}
+
+.login-form-section {
+  background: rgba(14, 23, 40, 0.95);
+  border: 1px solid var(--dark-border);
+}
+
+.login-heading {
+  color: var(--dark-text);
+}
+
+.login-button {
+  background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%);
+  color: #001119;
+}
+
+.login-error {
+  background: rgba(127, 29, 29, 0.25);
+  border-color: rgba(248, 113, 113, 0.45);
+  color: #fecaca;
+}
+
+.login-footer {
+  border-top-color: var(--dark-border);
+}
+
+.login-footer-text code {
+  background: #0a1424;
+  color: #9bdaf9;
+}
+
+.toggle-password {
+  color: var(--dark-text);
+}
+
+.camera-box {
+  background: #060a13;
+}
+
+.camera-hint {
+  background: rgba(6, 10, 19, 0.85);
+}
+
+.qr-card {
+  background: #fff;
+}
+
+.attendance-error {
+  background: rgba(127, 29, 29, 0.35);
+  color: #fecaca;
+  border-color: rgba(248, 113, 113, 0.4);
+}
+
+.attendance-success {
+  background: rgba(20, 83, 45, 0.35);
+  color: #bbf7d0;
+  border-color: rgba(74, 222, 128, 0.35);
+}
+
+.modal-overlay {
+  background: rgba(2, 6, 23, 0.72);
+}
+
+.salary-details p {
+  border-bottom-color: var(--dark-border);
+}
