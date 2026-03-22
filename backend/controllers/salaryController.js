@@ -1,78 +1,93 @@
 const Salary = require("../models/Salary");
+const { calculatePayrollBreakdown } = require("../utils/payrollUtils");
 
 /* CREATE SALARY */
 exports.createSalary = async (req, res) => {
   try {
-    const { employeeId, basic, hra, conveyance } = req.body;
+    const { employeeId } = req.body;
+    const basic = Number(req.body.basic);
+    const hra = Number(req.body.hra);
+    const conveyance = Number(req.body.conveyance);
+    const applyProration =
+      req.body.applyProration === true || req.body.applyProration === "true";
+    const presentDays =
+      req.body.presentDays === undefined ? null : Number(req.body.presentDays);
+    const workingDaysInMonth =
+      req.body.workingDaysInMonth === undefined
+        ? null
+        : Number(req.body.workingDaysInMonth);
 
-    // Calculate total earnings
-    const totalEarnings = basic + hra + conveyance;
+    if (applyProration) {
+      if (presentDays === null || workingDaysInMonth === null) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "'presentDays' and 'workingDaysInMonth' are required when proration is enabled",
+          data: {}
+        });
+      }
 
-    // PF CALCULATIONS
-    // Employee PF: 12% of total earnings
-    const employeePF = Math.round(totalEarnings * 0.12);
+      if (presentDays > workingDaysInMonth) {
+        return res.status(400).json({
+          success: false,
+          message: "'presentDays' cannot be greater than 'workingDaysInMonth'",
+          data: {}
+        });
+      }
+    }
 
-    // Employer PF: 12% total
-    // - 8.33% goes to employee pension
-    // - Remaining (~3.67%) goes to employer PF
-    const employerPFTotal = Math.round(totalEarnings * 0.12);
-    const employerPensionContribution = Math.round(employerPFTotal * 0.8333);
-    const employerPFContribution = employerPFTotal - employerPensionContribution;
-
-    // ESIC CALCULATIONS (Employees' State Insurance Corporation)
-    // Rules:
-    // - If wages > Rs 21,000/month: ESIC is not applicable
-    // - If wages <= Rs 21,000/month:
-    //   - Employee contribution: 0.75% of gross wages
-    //   - Employer contribution: 3.25% of gross wages
-    const esicApplicable = totalEarnings <= 21000;
-    const employeeESIC = esicApplicable ? Math.round(totalEarnings * 0.0075) : 0;
-    const employerESIC = esicApplicable ? Math.round(totalEarnings * 0.0325) : 0;
-
-    // Employee pension contribution (employer's pension component)
-    const pensionContribution = employerPensionContribution;
+    const payroll = calculatePayrollBreakdown({
+      basic,
+      hra,
+      conveyance,
+      applyProration,
+      presentDays,
+      workingDaysInMonth
+    });
 
     // Check if salary already exists for this employee
     let salary = await Salary.findOne({ employeeId });
 
     if (salary) {
       // Update existing salary
-      salary.basic = basic;
-      salary.hra = hra;
-      salary.conveyance = conveyance;
-      salary.totalEarnings = totalEarnings;
-      salary.employeePF = employeePF;
-      salary.employerPF = employerPFContribution;
-      salary.employerPensionContribution = employerPensionContribution;
-      salary.pensionContribution = pensionContribution;
-      salary.employeeESIC = employeeESIC;
-      salary.employerESIC = employerESIC;
-      salary.esicApplicable = esicApplicable;
+      salary.basic = payroll.basic;
+      salary.hra = payroll.hra;
+      salary.conveyance = payroll.conveyance;
+      salary.applyProration = payroll.applyProration;
+      salary.presentDays = payroll.presentDays;
+      salary.workingDaysInMonth = payroll.workingDaysInMonth;
+      salary.proratedBasic = payroll.proratedBasic;
+      salary.totalEarnings = payroll.totalEarnings;
+      salary.employeePF = payroll.employeePF;
+      salary.employerPF = payroll.employerPF;
+      salary.employerPensionContribution = payroll.employerPensionContribution;
+      salary.pensionContribution = payroll.pensionContribution;
+      salary.employeeESIC = payroll.employeeESIC;
+      salary.employerESIC = payroll.employerESIC;
+      salary.esicApplicable = payroll.esicApplicable;
       await salary.save();
     } else {
       // Create new salary
       salary = await Salary.create({
         employeeId,
-        basic,
-        hra,
-        conveyance,
-        totalEarnings,
-        employeePF,
-        employerPF: employerPFContribution,
-        employerPensionContribution,
-        pensionContribution,
-        employeeESIC,
-        employerESIC,
-        esicApplicable
+        ...payroll
       });
     }
 
-    res.status(201).json({
+    return res.status(201).json({
+      success: true,
       message: "Salary created/updated successfully",
+      data: {
+        salary
+      },
       salary
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+      data: {}
+    });
   }
 };
 
@@ -87,7 +102,9 @@ exports.getEmployeeSalary = async (req, res) => {
       loggedInUser.employeeId?.toString() !== employeeId
     ) {
       return res.status(403).json({
-        message: "You can view only your own salary"
+        success: false,
+        message: "You can view only your own salary",
+        data: {}
       });
     }
 
@@ -97,11 +114,26 @@ exports.getEmployeeSalary = async (req, res) => {
     );
 
     if (!salary) {
-      return res.status(404).json({ message: "Salary not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Salary not found",
+        data: {}
+      });
     }
 
-    res.json(salary);
+    return res.status(200).json({
+      success: true,
+      message: "Salary fetched successfully",
+      data: {
+        salary
+      },
+      salary
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+      data: {}
+    });
   }
 };

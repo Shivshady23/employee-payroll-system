@@ -23,6 +23,26 @@ const salarySchema = new mongoose.Schema(
       required: true
     },
 
+    applyProration: {
+      type: Boolean,
+      default: false
+    },
+
+    presentDays: {
+      type: Number,
+      default: null
+    },
+
+    workingDaysInMonth: {
+      type: Number,
+      default: null
+    },
+
+    proratedBasic: {
+      type: Number,
+      default: null
+    },
+
     totalEarnings: Number,
 
     // PF Contributions

@@ -8,7 +8,7 @@ const SalaryView = () => {
   const fetchSalary = async () => {
     try {
       const res = await api.get(`/salary/${employeeId}`);
-      setSalary(res.data);
+      setSalary(res.data?.data?.salary || res.data?.salary || null);
     } catch (err) {
       alert("Salary not found");
       setSalary(null);

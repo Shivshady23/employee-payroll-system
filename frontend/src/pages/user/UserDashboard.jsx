@@ -1,17 +1,19 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axios";
+import EmployeePunchCard from "../../components/EmployeePunchCard";
 
 const UserDashboard = () => {
   const navigate = useNavigate();
   const [salary, setSalary] = useState(null);
   const [userInfo, setUserInfo] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("salary");
 
   const fetchOwnSalary = useCallback(async employeeId => {
     try {
       const response = await api.get(`/salary/${employeeId}`);
-      setSalary(response.data);
+      setSalary(response.data?.data?.salary || response.data?.salary || null);
     } catch (_error) {
       setSalary(null);
     }
@@ -62,62 +64,72 @@ const UserDashboard = () => {
       )}
 
       <div className="tabs">
-        <button className="tab-btn active" type="button">
+        <button
+          className={`tab-btn ${activeTab === "salary" ? "active" : ""}`}
+          type="button"
+          onClick={() => setActiveTab("salary")}
+        >
           My Salary
         </button>
         <button
-          className="tab-btn"
+          className={`tab-btn ${activeTab === "attendance" ? "active" : ""}`}
           type="button"
-          onClick={() => navigate("/user/attendance")}
+          onClick={() => setActiveTab("attendance")}
         >
-          Attendance
+          My Attendance
         </button>
       </div>
 
       <div className="tab-content">
-        <div className="salary-view">
-          <h2>Your Salary Details</h2>
-          {loading ? (
-            <p>Loading...</p>
-          ) : salary ? (
-            <div className="salary-card">
-              <div className="salary-section">
-                <h3>Earnings</h3>
-                <p><strong>Basic Salary:</strong> Rs {salary.basic.toLocaleString()}</p>
-                <p><strong>HRA:</strong> Rs {salary.hra.toLocaleString()}</p>
-                <p><strong>Conveyance:</strong> Rs {salary.conveyance.toLocaleString()}</p>
-                <p className="total">
-                  <strong>Total Earnings:</strong> Rs {salary.totalEarnings.toLocaleString()}
-                </p>
-              </div>
+        {activeTab === "salary" && (
+          <div className="salary-view">
+            <h2>Your Salary Details</h2>
+            {loading ? (
+              <p>Loading...</p>
+            ) : salary ? (
+              <div className="salary-card">
+                <div className="salary-section">
+                  <h3>Earnings</h3>
+                  <p><strong>Basic Salary:</strong> Rs {salary.basic.toLocaleString()}</p>
+                  {salary.applyProration && salary.proratedBasic !== null && (
+                    <p><strong>Prorated Basic:</strong> Rs {salary.proratedBasic.toLocaleString()}</p>
+                  )}
+                  <p><strong>HRA:</strong> Rs {salary.hra.toLocaleString()}</p>
+                  <p><strong>Conveyance:</strong> Rs {salary.conveyance.toLocaleString()}</p>
+                  <p className="total">
+                    <strong>Total Earnings:</strong> Rs {salary.totalEarnings.toLocaleString()}
+                  </p>
+                </div>
 
-              <div className="salary-section">
-                <h3>Deductions</h3>
-                <p><strong>Employee PF (12%):</strong> Rs {salary.employeePF.toLocaleString()}</p>
-                <p>
-                  <strong>Pension Contribution (5%):</strong> Rs{" "}
-                  {salary.pensionContribution.toLocaleString()}
-                </p>
-                {salary.employeeESIC > 0 && (
-                  <p><strong>Employee ESIC:</strong> Rs {salary.employeeESIC.toLocaleString()}</p>
-                )}
-              </div>
+                <div className="salary-section">
+                  <h3>Deductions</h3>
+                  <p><strong>Employee PF (12%):</strong> Rs {salary.employeePF.toLocaleString()}</p>
+                  <p>
+                    <strong>Pension Contribution (5%):</strong> Rs{" "}
+                    {salary.pensionContribution.toLocaleString()}
+                  </p>
+                  {salary.employeeESIC > 0 && (
+                    <p><strong>Employee ESIC:</strong> Rs {salary.employeeESIC.toLocaleString()}</p>
+                  )}
+                </div>
 
-              <div className="salary-section">
-                <h3>Employer Contributions</h3>
-                <p>
-                  <strong>Employer Contributions (3.67%):</strong> Rs{" "}
-                  {salary.employerPF.toLocaleString()}
-                </p>
-                {salary.employerESIC > 0 && (
-                  <p><strong>Employer ESIC:</strong> Rs {salary.employerESIC.toLocaleString()}</p>
-                )}
+                <div className="salary-section">
+                  <h3>Employer Contributions</h3>
+                  <p>
+                    <strong>Employer Contributions (3.67%):</strong> Rs{" "}
+                    {salary.employerPF.toLocaleString()}
+                  </p>
+                  {salary.employerESIC > 0 && (
+                    <p><strong>Employer ESIC:</strong> Rs {salary.employerESIC.toLocaleString()}</p>
+                  )}
+                </div>
               </div>
-            </div>
-          ) : (
-            <p className="no-data">No salary information available yet.</p>
-          )}
-        </div>
+            ) : (
+              <p className="no-data">No salary information available yet.</p>
+            )}
+          </div>
+        )}
+        {activeTab === "attendance" && <EmployeePunchCard />}
       </div>
     </div>
   );

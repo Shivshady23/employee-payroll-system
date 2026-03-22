@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import EmployeeForm from "../../components/EmployeeForm";
 import SalaryForm from "../../components/SalaryForm";
+import AdminAttendanceView from "../../components/AdminAttendanceView";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -20,39 +21,42 @@ const AdminDashboard = () => {
 
   return (
     <div className="dashboard-container">
-      {/* Header */}
       <div className="dashboard-header">
-        <h1>👨‍💼 Admin Dashboard</h1>
+        <h1>Admin Dashboard</h1>
         <button className="logout-btn" onClick={handleLogout}>
-          🚪 Logout
+          Logout
         </button>
       </div>
 
-      {/* Tabs Navigation */}
       <div className="tabs">
         <button
           className={`tab-btn ${activeTab === "employees" ? "active" : ""}`}
           onClick={() => setActiveTab("employees")}
         >
-          ➕ Add Employee
+          Add Employee
         </button>
         <button
           className={`tab-btn ${activeTab === "salary" ? "active" : ""}`}
           onClick={() => setActiveTab("salary")}
         >
-          💰 Create Salary
+          Create Salary
+        </button>
+        <button
+          className={`tab-btn ${activeTab === "attendance" ? "active" : ""}`}
+          onClick={() => setActiveTab("attendance")}
+        >
+          Attendance
         </button>
       </div>
 
-      {/* Tab Content */}
       <div className="tab-content">
         {activeTab === "employees" && (
           <EmployeeForm key={refreshKey} onEmployeeCreated={handleEmployeeCreated} />
         )}
 
-        {activeTab === "salary" && (
-          <SalaryForm />
-        )}
+        {activeTab === "salary" && <SalaryForm />}
+
+        {activeTab === "attendance" && <AdminAttendanceView />}
       </div>
     </div>
   );

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import EmployeeForm from "../../components/EmployeeForm";
 import SalaryForm from "../../components/SalaryForm";
 import EmployeeList from "../../components/EmployeeList";
+import SuperAdminAttendanceView from "../../components/SuperAdminAttendanceView";
 
 const SuperAdminDashboard = () => {
   const navigate = useNavigate();
@@ -21,41 +22,44 @@ const SuperAdminDashboard = () => {
 
   return (
     <div className="dashboard-container">
-      {/* Header */}
       <div className="dashboard-header">
-        <h1>👑 SuperAdmin Dashboard</h1>
+        <h1>Superadmin Dashboard</h1>
         <button className="logout-btn" onClick={handleLogout}>
-          🚪 Logout
+          Logout
         </button>
       </div>
 
-      {/* Tabs Navigation */}
       <div className="tabs">
         <button
           className={`tab-btn ${activeTab === "employees" ? "active" : ""}`}
           onClick={() => setActiveTab("employees")}
         >
-          👥 View Employees
+          View Employees
         </button>
         <button
           className={`tab-btn ${activeTab === "add-employee" ? "active" : ""}`}
           onClick={() => setActiveTab("add-employee")}
         >
-          ➕ Add Employee
+          Add Employee
         </button>
         <button
           className={`tab-btn ${activeTab === "salary" ? "active" : ""}`}
           onClick={() => setActiveTab("salary")}
         >
-          💰 Create/Update Salary
+          Create/Update Salary
+        </button>
+        <button
+          className={`tab-btn ${activeTab === "attendance" ? "active" : ""}`}
+          onClick={() => setActiveTab("attendance")}
+        >
+          Attendance
         </button>
       </div>
 
-      {/* Tab Content */}
       <div className="tab-content">
         {activeTab === "employees" && (
           <div>
-            <h2>👥 All Employees</h2>
+            <h2>All Employees</h2>
             <EmployeeList key={refreshKey} />
           </div>
         )}
@@ -64,9 +68,9 @@ const SuperAdminDashboard = () => {
           <EmployeeForm key={refreshKey} onEmployeeCreated={handleEmployeeCreated} />
         )}
 
-        {activeTab === "salary" && (
-          <SalaryForm />
-        )}
+        {activeTab === "salary" && <SalaryForm />}
+
+        {activeTab === "attendance" && <SuperAdminAttendanceView />}
       </div>
     </div>
   );

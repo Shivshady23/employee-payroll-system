@@ -33,7 +33,7 @@ const EmployeeList = () => {
   const viewSalary = async (employeeId) => {
     try {
       const res = await api.get(`/salary/${employeeId}`);
-      setSelectedSalary(res.data);
+      setSelectedSalary(res.data?.data?.salary || res.data?.salary || null);
     } catch (err) {
       alert("Salary not found or you don't have permission to view it");
     }

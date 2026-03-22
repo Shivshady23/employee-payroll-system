@@ -8,61 +8,56 @@ const attendanceSchema = new mongoose.Schema(
       required: true,
       index: true
     },
-    userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+    date: {
+      type: Date,
       required: true,
       index: true
     },
-    dateKey: {
-      type: String,
-      required: true
-    },
-    checkInAt: {
+    punchIn: {
       type: Date
     },
-    checkOutAt: {
+    punchOut: {
       type: Date
     },
-    faceMatched: {
-      type: Boolean,
-      required: true,
-      default: false
-    },
-    locationVerified: {
-      type: Boolean,
-      required: true,
-      default: false
-    },
-    deviceType: {
+    status: {
       type: String,
-      enum: ["desktop", "mobile", "unknown"],
-      default: "unknown"
+      enum: ["present", "absent", "half-day", "leave"],
+      default: "present"
     },
-    location: {
-      lat: Number,
-      lng: Number,
-      accuracy: Number
+    workHours: {
+      type: Number,
+      default: 0
     },
-    selfieImageRef: {
-      type: String,
-      default: ""
+    ipAddress: {
+      type: String
     },
-    checkInSelfieRef: {
-      type: String,
-      default: ""
+    markedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User"
     },
-    checkOutSelfieRef: {
-      type: String,
-      default: ""
-    },
-    meta: {
-      distanceFromOfficeMeters: Number
+    correctionReason: {
+      type: String
     }
   },
   { timestamps: true }
 );
 
-attendanceSchema.index({ userId: 1, dateKey: 1 }, { unique: true });
+attendanceSchema.index({ employeeId: 1, date: 1 }, { unique: true });
+
+attendanceSchema.pre("save", function updateWorkHours(next) {
+  if (
+    this.punchIn instanceof Date &&
+    this.punchOut instanceof Date &&
+    this.punchOut > this.punchIn
+  ) {
+    this.workHours = Number(
+      ((this.punchOut.getTime() - this.punchIn.getTime()) / (1000 * 60 * 60)).toFixed(2)
+    );
+  } else {
+    this.workHours = 0;
+  }
+
+  next();
+});
 
 module.exports = mongoose.model("Attendance", attendanceSchema);
