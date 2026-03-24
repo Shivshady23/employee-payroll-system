@@ -84,4 +84,10 @@ const payrollTools = [
   }
 ];
 
-module.exports = { payrollTools };
+const geminiFunctionDeclarations = payrollTools.map(tool => ({
+  name: tool.name,
+  description: tool.description,
+  parametersJsonSchema: tool.input_schema
+}));
+
+module.exports = { payrollTools, geminiFunctionDeclarations };

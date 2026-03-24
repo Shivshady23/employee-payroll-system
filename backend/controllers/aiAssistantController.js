@@ -1,9 +1,11 @@
-const Anthropic = require("@anthropic-ai/sdk");
+const {
+  GoogleGenAI,
+  createPartFromFunctionResponse,
+  createUserContent
+} = require("@google/genai");
 
-const { payrollTools } = require("../utils/aiTools");
+const { geminiFunctionDeclarations } = require("../utils/aiTools");
 const { executeAITool } = require("../utils/executeAITool");
-
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const SYSTEM_PROMPT = `You are a smart HR and payroll assistant built into the Employee Payroll System.
 You help admins and superadmins manage employees, understand salary structures, and get payroll insights.
@@ -24,7 +26,7 @@ PF/ESIC Rules you follow exactly:
 - Employer ESIC = 3.25% of total earnings
 - Net Pay = Total Earnings - Employee PF - Employee ESIC
 
-Tone: Professional, concise, and helpful. When showing numbers, use ₹ symbol with comma formatting.
+Tone: Professional, concise, and helpful. When showing numbers, use INR with comma formatting.
 When listing employees, use a clean table-style format in markdown.
 Always confirm before creating or modifying data.`;
 
@@ -34,25 +36,38 @@ const normalizeIncomingMessages = messages =>
   messages
     .filter(item => item && (item.role === "user" || item.role === "assistant"))
     .map(item => ({
-      role: item.role,
-      content: typeof item.content === "string" ? item.content : JSON.stringify(item.content)
+      role: item.role === "assistant" ? "model" : "user",
+      parts: [
+        {
+          text: typeof item.content === "string" ? item.content : JSON.stringify(item.content)
+        }
+      ]
     }));
 
-const extractText = contentBlocks =>
-  (contentBlocks || [])
-    .filter(block => block.type === "text")
-    .map(block => block.text)
-    .join("")
-    .trim();
+const getGeminiApiKey = () =>
+  process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
+
+const getFunctionCallsFromResponse = response => {
+  if (Array.isArray(response?.functionCalls)) {
+    return response.functionCalls;
+  }
+
+  const parts = response?.candidates?.[0]?.content?.parts || [];
+  return parts
+    .filter(part => part?.functionCall)
+    .map(part => part.functionCall)
+    .filter(Boolean);
+};
 
 exports.chat = async (req, res) => {
   try {
     const { messages } = req.body;
+    const apiKey = getGeminiApiKey();
 
-    if (!process.env.ANTHROPIC_API_KEY) {
+    if (!apiKey) {
       return res.status(500).json({
         success: false,
-        message: "ANTHROPIC_API_KEY is missing on the server"
+        message: "GEMINI_API_KEY (or GOOGLE_API_KEY) is missing on the server"
       });
     }
 
@@ -63,56 +78,69 @@ exports.chat = async (req, res) => {
       });
     }
 
-    let currentMessages = normalizeIncomingMessages(messages);
+    const ai = new GoogleGenAI({ apiKey });
+    const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+
+    let contents = normalizeIncomingMessages(messages);
     let finalResponse = "";
     let loopCount = 0;
 
     while (loopCount < MAX_TOOL_LOOPS) {
       loopCount += 1;
 
-      const response = await client.messages.create({
-        model: process.env.ANTHROPIC_MODEL || "claude-sonnet-4-20250514",
-        max_tokens: 1024,
-        system: SYSTEM_PROMPT,
-        tools: payrollTools,
-        messages: currentMessages
+      const response = await ai.models.generateContent({
+        model,
+        contents,
+        config: {
+          systemInstruction: SYSTEM_PROMPT,
+          tools: [{ functionDeclarations: geminiFunctionDeclarations }],
+          maxOutputTokens: 1024
+        }
       });
 
-      const replyText = extractText(response.content);
+      const replyText = (response?.text || "").trim();
       if (replyText) {
         finalResponse = replyText;
       }
 
-      if (response.stop_reason === "end_turn") {
+      const functionCalls = getFunctionCallsFromResponse(response);
+      if (!functionCalls.length) {
         break;
       }
 
-      if (response.stop_reason === "tool_use") {
-        currentMessages.push({ role: "assistant", content: response.content });
-
-        const toolResults = [];
-        for (const block of response.content) {
-          if (block.type === "tool_use") {
-            const result = await executeAITool(block.name, block.input, {
-              performedBy: req.user?.id || null
-            });
-
-            toolResults.push({
-              type: "tool_result",
-              tool_use_id: block.id,
-              content: JSON.stringify(result)
-            });
-          }
-        }
-
-        currentMessages.push({
-          role: "user",
-          content: toolResults
-        });
-        continue;
+      const modelContent = response?.candidates?.[0]?.content;
+      if (modelContent) {
+        contents.push(modelContent);
       }
 
-      break;
+      const functionResponseParts = [];
+      for (let index = 0; index < functionCalls.length; index += 1) {
+        const functionCall = functionCalls[index] || {};
+        const toolName = functionCall.name;
+        const toolInput = functionCall.args || {};
+
+        if (!toolName) {
+          continue;
+        }
+
+        const result = await executeAITool(toolName, toolInput, {
+          performedBy: req.user?.id || null
+        });
+
+        functionResponseParts.push(
+          createPartFromFunctionResponse(
+            functionCall.id || `${toolName}-${loopCount}-${index}`,
+            toolName,
+            result
+          )
+        );
+      }
+
+      if (!functionResponseParts.length) {
+        break;
+      }
+
+      contents.push(createUserContent(functionResponseParts));
     }
 
     return res.status(200).json({

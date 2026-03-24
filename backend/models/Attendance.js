@@ -44,7 +44,7 @@ const attendanceSchema = new mongoose.Schema(
 
 attendanceSchema.index({ employeeId: 1, date: 1 }, { unique: true });
 
-attendanceSchema.pre("save", function updateWorkHours(next) {
+attendanceSchema.pre("save", function updateWorkHours() {
   if (
     this.punchIn instanceof Date &&
     this.punchOut instanceof Date &&
@@ -57,7 +57,6 @@ attendanceSchema.pre("save", function updateWorkHours(next) {
     this.workHours = 0;
   }
 
-  next();
 });
 
 module.exports = mongoose.model("Attendance", attendanceSchema);

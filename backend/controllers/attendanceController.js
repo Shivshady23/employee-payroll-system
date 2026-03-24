@@ -3,6 +3,51 @@ const AuditLog = require("../models/AuditLog");
 const Employee = require("../models/Employee");
 
 const ATTENDANCE_COLLECTION = "Attendance";
+const OFFICE_START_HOUR = 10;
+const OFFICE_END_HOUR = 19;
+const OFFICE_TIMEZONE = "Asia/Kolkata";
+const OFFICE_HOURS_LABEL = `${OFFICE_START_HOUR}:00 to ${OFFICE_END_HOUR}:00 (IST)`;
+
+const getTimePartsInOfficeTimezone = date => {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: OFFICE_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23"
+  });
+
+  const parts = formatter.formatToParts(date).reduce((acc, part) => {
+    if (part.type !== "literal") {
+      acc[part.type] = part.value;
+    }
+    return acc;
+  }, {});
+
+  return {
+    hour: Number(parts.hour),
+    minute: Number(parts.minute),
+    second: Number(parts.second)
+  };
+};
+
+const getOfficeHourValue = date => {
+  const { hour, minute, second } = getTimePartsInOfficeTimezone(date);
+  return hour + minute / 60 + second / 3600;
+};
+
+const isWithinPunchInWindow = date => {
+  const officeHourValue = getOfficeHourValue(date);
+  return officeHourValue >= OFFICE_START_HOUR && officeHourValue < OFFICE_END_HOUR;
+};
+
+const isWithinPunchOutWindow = date => {
+  const officeHourValue = getOfficeHourValue(date);
+  return officeHourValue >= OFFICE_START_HOUR && officeHourValue <= OFFICE_END_HOUR;
+};
 
 const getUtcDayRange = dateInput => {
   const baseDate = dateInput ? new Date(dateInput) : new Date(Date.now());
@@ -76,6 +121,14 @@ exports.punchIn = async (req, res) => {
     }
 
     const now = new Date(Date.now());
+    if (!isWithinPunchInWindow(now)) {
+      return res.status(400).json({
+        success: false,
+        message: `Punch in is allowed only between ${OFFICE_HOURS_LABEL}`,
+        data: {}
+      });
+    }
+
     const dayRange = getUtcDayRange(now);
     const employeeId = req.user.employeeId;
 
@@ -141,6 +194,14 @@ exports.punchOut = async (req, res) => {
     }
 
     const now = new Date(Date.now());
+    if (!isWithinPunchOutWindow(now)) {
+      return res.status(400).json({
+        success: false,
+        message: `Punch out is allowed only between ${OFFICE_HOURS_LABEL}`,
+        data: {}
+      });
+    }
+
     const dayRange = getUtcDayRange(now);
     const employeeId = req.user.employeeId;
 
