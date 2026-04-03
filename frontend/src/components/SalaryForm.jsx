@@ -7,9 +7,6 @@ const SalaryForm = () => {
   const [basic, setBasic] = useState("");
   const [hra, setHra] = useState("");
   const [conveyance, setConveyance] = useState("");
-  const [applyProration, setApplyProration] = useState(false);
-  const [presentDays, setPresentDays] = useState("");
-  const [workingDaysInMonth, setWorkingDaysInMonth] = useState("");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
@@ -59,25 +56,6 @@ const SalaryForm = () => {
       nextErrors.conveyance = "Conveyance cannot be negative";
     }
 
-    if (applyProration) {
-      if (presentDays === "") {
-        nextErrors.presentDays = "Present days are required when proration is enabled";
-      }
-
-      if (workingDaysInMonth === "") {
-        nextErrors.workingDaysInMonth =
-          "Working days in month are required when proration is enabled";
-      }
-
-      if (
-        presentDays !== "" &&
-        workingDaysInMonth !== "" &&
-        Number(presentDays) > Number(workingDaysInMonth)
-      ) {
-        nextErrors.presentDays = "Present days cannot exceed working days in month";
-      }
-    }
-
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   };
@@ -86,34 +64,34 @@ const SalaryForm = () => {
     const basicNum = Number(basic) || 0;
     const hraNum = Number(hra) || 0;
     const conveyanceNum = Number(conveyance) || 0;
-    const presentNum = Number(presentDays) || 0;
-    const workingNum = Number(workingDaysInMonth) || 0;
-
-    const effectiveBasic =
-      applyProration && workingNum > 0
-        ? Number(((basicNum / workingNum) * presentNum).toFixed(2))
-        : basicNum;
-
-    const totalEarnings = Number((effectiveBasic + hraNum + conveyanceNum).toFixed(2));
-    const employeePF = Math.round(effectiveBasic * 0.12);
-    const employerPFTotal = Math.round(effectiveBasic * 0.12);
+    const totalEarnings = Number((basicNum + hraNum + conveyanceNum).toFixed(2));
+    const employeePF = Math.round(basicNum * 0.12);
+    const employerPFTotal = Math.round(basicNum * 0.12);
     const employerPension = Math.round(employerPFTotal * 0.8333);
     const employerPF = employerPFTotal - employerPension;
-    const esicApplicable = effectiveBasic <= 21000;
-    const employeeESIC = esicApplicable ? Math.round(effectiveBasic * 0.0075) : 0;
-    const employerESIC = esicApplicable ? Math.round(effectiveBasic * 0.0325) : 0;
+    const esicApplicable = basicNum <= 21000;
+    const employeeESIC = esicApplicable ? Math.round(basicNum * 0.0075) : 0;
+    const employerESIC = esicApplicable ? Math.round(basicNum * 0.0325) : 0;
+    const totalDeductions = employeePF + employeeESIC;
+    const employerTotal = employerPF + employerPension + employerESIC;
+    const netPay = totalEarnings - totalDeductions;
 
     return {
-      effectiveBasic,
+      basicNum,
+      hraNum,
+      conveyanceNum,
       totalEarnings,
       employeePF,
       employerPF,
       employerPension,
       employeeESIC,
       employerESIC,
-      esicApplicable
+      esicApplicable,
+      totalDeductions,
+      employerTotal,
+      netPay
     };
-  }, [applyProration, basic, conveyance, hra, presentDays, workingDaysInMonth]);
+  }, [basic, conveyance, hra]);
 
   const handleSubmit = async event => {
     event.preventDefault();
@@ -130,9 +108,7 @@ const SalaryForm = () => {
         basic: Number(basic),
         hra: Number(hra),
         conveyance: Number(conveyance),
-        applyProration,
-        presentDays: applyProration ? Number(presentDays) : undefined,
-        workingDaysInMonth: applyProration ? Number(workingDaysInMonth) : undefined
+        applyProration: false
       });
 
       const salary = response.data?.data?.salary || response.data?.salary;
@@ -142,9 +118,6 @@ const SalaryForm = () => {
       setBasic("");
       setHra("");
       setConveyance("");
-      setApplyProration(false);
-      setPresentDays("");
-      setWorkingDaysInMonth("");
       setErrors({});
     } catch (error) {
       alert(error.response?.data?.message || "Error creating salary");
@@ -238,68 +211,41 @@ const SalaryForm = () => {
           </div>
         </div>
 
-        <div className="form-group attendance-proration-toggle">
-          <label htmlFor="apply-proration" className="form-label">
-            <input
-              id="apply-proration"
-              type="checkbox"
-              checked={applyProration}
-              onChange={event => setApplyProration(event.target.checked)}
-            />
-            Apply Attendance Proration for this payroll run
-          </label>
-        </div>
-
-        {applyProration && (
-          <div className="salary-inputs-grid">
-            <div className="form-group">
-              <label htmlFor="present-days" className="form-label">
-                Present Days
-              </label>
-              <input
-                id="present-days"
-                type="number"
-                className={`form-input ${errors.presentDays ? "input-error" : ""}`}
-                value={presentDays}
-                onChange={event => setPresentDays(event.target.value)}
-                min="0"
-              />
-              {errors.presentDays && <small className="form-error">{errors.presentDays}</small>}
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="working-days" className="form-label">
-                Working Days In Month
-              </label>
-              <input
-                id="working-days"
-                type="number"
-                className={`form-input ${errors.workingDaysInMonth ? "input-error" : ""}`}
-                value={workingDaysInMonth}
-                onChange={event => setWorkingDaysInMonth(event.target.value)}
-                min="1"
-              />
-              {errors.workingDaysInMonth && (
-                <small className="form-error">{errors.workingDaysInMonth}</small>
-              )}
-            </div>
-          </div>
-        )}
-
         <div className="salary-preview">
           <h3 className="preview-title">Salary Breakdown Preview</h3>
           <div className="preview-section earnings-section">
-            <p><strong>Effective Basic:</strong> Rs {preview.effectiveBasic.toLocaleString()}</p>
-            <p><strong>Total Earnings:</strong> Rs {preview.totalEarnings.toLocaleString()}</p>
+            <strong>Earnings</strong>
+            <p className="preview-item">Basic: Rs {preview.basicNum.toLocaleString()}</p>
+            <p className="preview-item">HRA: Rs {preview.hraNum.toLocaleString()}</p>
+            <p className="preview-item">Conveyance: Rs {preview.conveyanceNum.toLocaleString()}</p>
+            <p className="preview-total">Total: Rs {preview.totalEarnings.toLocaleString()}</p>
           </div>
           <div className="preview-section deductions-section">
-            <p><strong>Employee PF:</strong> Rs {preview.employeePF.toLocaleString()}</p>
-            <p><strong>Employee ESIC:</strong> Rs {preview.employeeESIC.toLocaleString()}</p>
+            <strong>Employee Deductions</strong>
+            <p className="preview-item">PF (12%): Rs {preview.employeePF.toLocaleString()}</p>
+            <p className="preview-item">
+              ESIC (0.75%): Rs {preview.employeeESIC.toLocaleString()}
+              {!preview.esicApplicable && <span className="badge">Not Applicable</span>}
+            </p>
+            <p className="preview-total">
+              Total Deductions: Rs {preview.totalDeductions.toLocaleString()}
+            </p>
           </div>
           <div className="preview-section employer-section">
-            <p><strong>Employer PF:</strong> Rs {preview.employerPF.toLocaleString()}</p>
-            <p><strong>Employer Pension:</strong> Rs {preview.employerPension.toLocaleString()}</p>
-            <p><strong>Employer ESIC:</strong> Rs {preview.employerESIC.toLocaleString()}</p>
+            <strong>Employer Contributions</strong>
+            <p className="preview-item">PF (3.67%): Rs {preview.employerPF.toLocaleString()}</p>
+            <p className="preview-item">
+              Pension (8.33%): Rs {preview.employerPension.toLocaleString()}
+            </p>
+            <p className="preview-item">
+              ESIC (3.25%): Rs {preview.employerESIC.toLocaleString()}
+              {!preview.esicApplicable && <span className="badge">Not Applicable</span>}
+            </p>
+            <p className="preview-total">Total: Rs {preview.employerTotal.toLocaleString()}</p>
+          </div>
+          <div className="preview-section netpay-section">
+            <strong>Net Pay</strong>
+            <p className="preview-netpay">Rs {preview.netPay.toLocaleString()}</p>
           </div>
         </div>
 

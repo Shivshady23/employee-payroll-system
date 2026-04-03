@@ -47,6 +47,13 @@ const UserDashboard = () => {
   const totalEarnings = Number(salary?.totalEarnings || 0);
   const totalDeductions = Number(salary?.employeePF || 0) + Number(salary?.employeeESIC || 0);
   const netPay = totalEarnings - totalDeductions;
+  const basicSalary = Number(salary?.basic || 0);
+  const hra = Number(salary?.hra || 0);
+  const conveyance = Number(salary?.conveyance || 0);
+  const employeePF = Number(salary?.employeePF || 0);
+  const employeeESIC = Number(salary?.employeeESIC || 0);
+  const employerPF = Number(salary?.employerPF || 0);
+  const employerESIC = Number(salary?.employerESIC || 0);
   const employerPension = Number(salary?.employerPensionContribution ?? salary?.pensionContribution ?? 0);
 
   return (
@@ -93,50 +100,49 @@ const UserDashboard = () => {
               <p>Loading...</p>
             ) : salary ? (
               <div className="salary-card">
-                <div className="salary-section">
-                  <h3>CTC</h3>
-                  <p><strong>Basic Salary:</strong> Rs {salary.basic.toLocaleString()}</p>
-                  {salary.applyProration && salary.proratedBasic !== null && (
-                    <p><strong>Prorated Basic:</strong> Rs {salary.proratedBasic.toLocaleString()}</p>
-                  )}
-                  <p><strong>HRA:</strong> Rs {salary.hra.toLocaleString()}</p>
-                  <p><strong>Conveyance:</strong> Rs {salary.conveyance.toLocaleString()}</p>
-                  <p className="total">
-                    <strong>Total CTC:</strong> Rs {salary.totalEarnings.toLocaleString()}
-                  </p>
-                </div>
+                <div className="salary-preview">
+                  <h3 className="preview-title">Salary Breakdown Preview</h3>
 
-                <div className="salary-section">
-                  <h3>Deductions</h3>
-                  <p><strong>Employee PF (12%):</strong> Rs {salary.employeePF.toLocaleString()}</p>
-                  {salary.employeeESIC > 0 && (
-                    <p><strong>Employee ESIC:</strong> Rs {salary.employeeESIC.toLocaleString()}</p>
-                  )}
-                  <p className="total">
-                    <strong>Total Deductions:</strong> Rs {totalDeductions.toLocaleString()}
-                  </p>
-                </div>
+                  <div className="preview-section earnings-section">
+                    <strong>Earnings</strong>
+                    <p className="preview-item">Basic: Rs {basicSalary.toLocaleString()}</p>
+                    {salary.applyProration && salary.proratedBasic !== null && (
+                      <p className="preview-item">
+                        Prorated Basic: Rs {Number(salary.proratedBasic).toLocaleString()}
+                      </p>
+                    )}
+                    <p className="preview-item">HRA: Rs {hra.toLocaleString()}</p>
+                    <p className="preview-item">Conveyance: Rs {conveyance.toLocaleString()}</p>
+                    <p className="preview-total">Total: Rs {totalEarnings.toLocaleString()}</p>
+                  </div>
 
-                <div className="salary-section">
-                  <h3>Employer Contributions</h3>
-                  <p>
-                    <strong>Employer Contributions (3.67%):</strong> Rs{" "}
-                    {salary.employerPF.toLocaleString()}
-                  </p>
-                  <p>
-                    <strong>Employer Pension Contribution (8.33%):</strong> Rs{" "}
-                    {employerPension.toLocaleString()}
-                  </p>
-                  {salary.employerESIC > 0 && (
-                    <p><strong>Employer ESIC:</strong> Rs {salary.employerESIC.toLocaleString()}</p>
-                  )}
-                </div>
+                  <div className="preview-section deductions-section">
+                    <strong>Employee Deductions</strong>
+                    <p className="preview-item">PF (12%): Rs {employeePF.toLocaleString()}</p>
+                    <p className="preview-item">
+                      ESIC (0.75%): Rs {employeeESIC.toLocaleString()}
+                      {employeeESIC === 0 && <span className="badge">Not Applicable</span>}
+                    </p>
+                    <p className="preview-total">Total Deductions: Rs {totalDeductions.toLocaleString()}</p>
+                  </div>
 
-                <div className="salary-section">
-                  <h3>Net Pay</h3>
-                  <p className="total">
-                    <strong>Amount Payable (After Deductions):</strong> Rs {netPay.toLocaleString()}
-                  </p>
+                  <div className="preview-section employer-section">
+                    <strong>Employer Contributions</strong>
+                    <p className="preview-item">PF (3.67%): Rs {employerPF.toLocaleString()}</p>
+                    <p className="preview-item">Pension (8.33%): Rs {employerPension.toLocaleString()}</p>
+                    <p className="preview-item">
+                      ESIC (3.25%): Rs {employerESIC.toLocaleString()}
+                      {employerESIC === 0 && <span className="badge">Not Applicable</span>}
+                    </p>
+                    <p className="preview-total">
+                      Total: Rs {(employerPF + employerPension + employerESIC).toLocaleString()}
+                    </p>
+                  </div>
+
+                  <div className="preview-section netpay-section">
+                    <strong>Net Pay</strong>
+                    <p className="preview-netpay">Rs {netPay.toLocaleString()}</p>
+                  </div>
                 </div>
               </div>
             ) : (
